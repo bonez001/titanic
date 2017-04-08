@@ -1,0 +1,118 @@
+# Logistic Regression
+#install.packages("e1071")
+# Importing  dataset
+rm(list=ls())
+library(e1071)
+dataset = read.csv('file:///C:/Users/ShiningStar/Downloads/train.csv')
+
+set.seed(123)
+
+#training_set = dataset[dataset$Sex=="female",]
+training_set = dataset
+
+
+training_set$Pclass = as.factor(training_set$Pclass)
+#training_set$SibSp= as.factor(training_set$SibSp)
+#training_set$Parch = as.factor(training_set$Parch)
+mod_tage = (training_set$Age)[!is.na(training_set$Age)]
+training_set$Age[is.na(training_set$Age)] <-mean(mod_tage)
+training_set$Age = scale(as.numeric(training_set$Age))
+training_set$Embarked = as.factor(training_set$Embarked)
+
+
+test_set = read.csv('C:\\Users\\ShiningStar\\Downloads\\test.csv')
+
+test_set$Pclass = as.factor(test_set$Pclass)
+#test_set$SibSp= as.factor(test_set$SibSp)
+
+mod_tage_test = (test_set$Age)[!is.na(test_set$Age)]
+test_set$Age[is.na(test_set$Age)] <-mean(mod_tage_test)
+
+mod_tfare_test = (test_set$Fare)[!is.na(test_set$Fare)]
+test_set$Fare[is.na(test_set$Fare)] = mean(mod_tfare_test)
+
+
+test_set$Age = scale(as.numeric(test_set$Age))
+test_set$Embarked = as.factor(test_set$Embarked)
+
+#test_set$Parch[test_set$Parch==9]<-6
+#test_set$Parch = as.factor(test_set$Parch)
+# Feature Scaling
+# training_set[, 1:2] = scale(training_set[, 1:2])
+# test_set[, 1:2] = scale(test_set[, 1:2])
+
+
+# Fitting Logistic Regression to the Training set
+
+
+classifier_male = glm(formula = Survived ~ Fare*Parch + SibSp +Age,
+                 family = binomial,
+                 data = training_set[training_set$Sex=="male",])
+
+# classifier = glm(formula = Survived ~ Fare*Parch + SibSp,
+#              family = binomial,
+#              data = training_set)
+
+prob_pred_train_male =  predict(classifier_male, type = 'response', newdata = training_set[training_set$Sex=="male",])
+
+y_pred_train_male = ifelse(prob_pred_train_male > 0.5, 1, 0)
+
+
+
+# Making the Confusion Matrix
+cm_train_male = table(training_set[training_set$Sex=="male", 2], y_pred_train_male)
+
+(cm_train_male[1,1]+cm_train_male[2,2])/sum(cm_train_male)
+summary(classifier_male)
+cm_train_male
+
+
+
+
+# classifier_female = svm(formula = Survived ~  Fare*Parch + SibSp +Age,
+#                       
+#                       data = training_set[training_set$Sex=="female",])
+
+classifier_female = glm(formula = Survived ~ Fare*Parch + Parch*Age + Parch*SibSp - Age - SibSp,
+             family = binomial,
+             data = training_set)
+
+prob_pred_train_female =  predict(classifier_female, type = 'response', newdata = training_set[training_set$Sex=="female",])
+
+y_pred_train_female = ifelse(prob_pred_train_female > 0.5, 1, 0)
+
+
+
+# Making the Confusion Matrix
+cm_train_female = table(training_set[training_set$Sex=="female", 2], y_pred_train_female)
+
+(cm_train_female[1,1]+cm_train_female[2,2])/sum(cm_train_female)
+summary(classifier_female)
+cm_train_female
+
+
+
+
+
+prob_pred_male =  predict(classifier_male, type = 'response', newdata = test_set[test_set$Sex=="male",])
+
+y_pred_male = ifelse(prob_pred_male > 0.5, 1, 0)
+test_set$Survived = rep(0,time=length(test_set[,1]))
+test_set[test_set$Sex=="male",]$Survived = y_pred_male
+
+
+prob_pred_female =  predict(classifier_male, type = 'response', newdata = test_set[test_set$Sex=="female",])
+
+y_pred_female = ifelse(prob_pred_female > 0.5, 1, 0)
+
+test_set[test_set$Sex=="female",]$Survived = y_pred_female
+
+
+
+
+final_sub<-test_set[,c(1,12)]
+
+write.table(final_sub, file="MYfirst.csv", sep=",", row.names = FALSE)
+
+
+

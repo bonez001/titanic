@@ -1,33 +1,40 @@
 # Logistic Regression
-
+#install.packages("e1071")
 # Importing  dataset
-dataset = read.csv('train.csv')
-
-
+library(e1071)
+dataset = read.csv('file:///C:/Users/ShiningStar/Downloads/train.csv')
 
 set.seed(123)
 
-training_set = dataset
+training_set = dataset[dataset$Sex=="female",]
+
+
 training_set$Pclass = as.factor(training_set$Pclass)
-training_set$SibSp= as.factor(training_set$SibSp)
-training_set$Parch = as.factor(training_set$Parch)
+#training_set$SibSp= as.factor(training_set$SibSp)
+#training_set$Parch = as.factor(training_set$Parch)
 mod_tage = (training_set$Age)[!is.na(training_set$Age)]
 training_set$Age[is.na(training_set$Age)] <-mean(mod_tage)
 training_set$Age = scale(as.numeric(training_set$Age))
 training_set$Embarked = as.factor(training_set$Embarked)
 
 
-test_set = read.csv('test.csv')
+test_set = read.csv('C:\\Users\\ShiningStar\\Downloads\\test.csv')
+
 test_set$Pclass = as.factor(test_set$Pclass)
-test_set$SibSp= as.factor(test_set$SibSp)
+#test_set$SibSp= as.factor(test_set$SibSp)
 
 mod_tage_test = (test_set$Age)[!is.na(test_set$Age)]
 test_set$Age[is.na(test_set$Age)] <-mean(mod_tage_test)
+
+mod_tfare_test = (test_set$Fare)[!is.na(test_set$Fare)]
+test_set$Fare[is.na(test_set$Fare)] = mean(mod_tfare_test)
+
+
 test_set$Age = scale(as.numeric(test_set$Age))
 test_set$Embarked = as.factor(test_set$Embarked)
 
-test_set$Parch[test_set$Parch==9]<-6
-test_set$Parch = as.factor(test_set$Parch)
+#test_set$Parch[test_set$Parch==9]<-6
+#test_set$Parch = as.factor(test_set$Parch)
 # Feature Scaling
 # training_set[, 1:2] = scale(training_set[, 1:2])
 # test_set[, 1:2] = scale(test_set[, 1:2])
@@ -36,15 +43,17 @@ test_set$Parch = as.factor(test_set$Parch)
 # Fitting Logistic Regression to the Training set
 
 
-classifier = glm(formula = Survived ~ Sex + SibSp + Parch,
-                     family = binomial,
-                     data = training_set)
+classifier = glm(formula = Survived ~ Age*Fare + SibSp + Parch,
+                 family = binomial,
+                 data = training_set)
 
-
+#classifier = svm( Survived ~ Sex + SibSp + Fare,data = training_set )
 
 prob_pred_train =  predict(classifier, type = 'response', newdata = training_set)
 
 y_pred_train = ifelse(prob_pred_train > 0.5, 1, 0)
+
+
 
 # Making the Confusion Matrix
 cm_train = table(training_set[, 2], y_pred_train)
@@ -60,8 +69,12 @@ prob_pred =  predict(classifier, type = 'response', newdata = test_set)
 
 y_pred = ifelse(prob_pred > 0.5, 1, 0)
 
-test_set$Survived = ypred
+test_set$Survived = y_pred
 
-write.csv(test_set, file="MYfirst.csv")
+final_sub<-test_set[,c(1,12)]
 
+write.table(final_sub, file="MYfirst.csv", sep=",", row.names = FALSE)
 
+(cm_train[1,1]+cm_train[2,2])/sum(cm_train)
+
+summary(classifier)

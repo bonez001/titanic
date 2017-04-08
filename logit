@@ -1,12 +1,13 @@
 # Logistic Regression
 #install.packages("e1071")
 # Importing  dataset
+rm(list=ls())
 library(e1071)
 dataset = read.csv('file:///C:/Users/ShiningStar/Downloads/train.csv')
 
 set.seed(123)
 
-training_set = dataset[dataset$Sex=="female",]
+training_set = dataset
 
 
 training_set$Pclass = as.factor(training_set$Pclass)
@@ -43,7 +44,7 @@ test_set$Embarked = as.factor(test_set$Embarked)
 # Fitting Logistic Regression to the Training set
 
 
-classifier = glm(formula = Survived ~ Age*Fare + SibSp + Parch,
+classifier = glm(formula = Survived ~ Sex + SibSp,
                  family = binomial,
                  data = training_set)
 
